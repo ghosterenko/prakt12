@@ -1,55 +1,88 @@
 #include <iostream>
 #include <Windows.h>
 
-HANDLE mutex, Thread;
-DWORD IDThread;
+HANDLE mutex, printer;
+DWORD IDT;
 
-std::string state;
-std::string states[] = {
-	"Печать",
-	"Ошибка печати",
-	"Готово",
-	"Выключен"
-};
+STARTUPINFO si;
+PROCESS_INFORMATION pi;
 
-DWORD WINAPI thread() {
-	srand(time(NULL));
-	mutex = CreateMutex(NULL, TRUE, TEXT("PrinterMutex"));
-	if (mutex == NULL) {
-		std::cout << "Ошибка" << std::endl;
-		return GetLastError();
-	}
-	WaitForSingleObject(mutex, INFINITE);
+wchar_t PATH[] = L"C:\\файлы\\c++\\prakt12\\Client\\x64\\Debug\\.exe";
 
-	state = states[0];
-	std::cout << state << std::endl;
-
-	int tempSec = rand() % 16;
-	if (tempSec >= 10) {
-		std::cout << "Ошибка печати" << std::endl;
-	}
-	else {
-		Sleep(tempSec < 5 ? 5 : tempSec);
-	}
-
-	ReleaseMutex(mutex);
-	state = states[2];
-	std::cout << state << std::endl;
-
-	
+void menu() {
+    std::cout << "1. Печать - Высокий приоритет" << std::endl;
+    std::cout << "2. Печать - Нормальный приоритет" << std::endl;
+    std::cout << "1. Печать - Низкий приоритет" << std::endl;
 }
 
+DWORD WINAPI threadPrinter() {
+    menu();
+    while (true) {
+        char v;
+        std::cin >> v;
+        switch (v) {
+        case '1':
+            ZeroMemory(&si, sizeof(STARTUPINFO));   
+            si.cb = sizeof(STARTUPINFO);
+            if (!CreateProcess(PATH, NULL, NULL, NULL, FALSE, CREATE_NEW_CONSOLE, NULL, NULL, &si, &pi)) {
+                return GetLastError();
+            }
+            
+            if (WaitForSingleObject(mutex, 600000) == WAIT_OBJECT_0) {
+
+            }
+            else {
+
+            }
+
+            WaitForSingleObject(pi.hProcess, INFINITE);
+            CloseHandle(pi.hProcess);
+            CloseHandle(pi.hThread);
+
+            break;
+        case '2':
+            ZeroMemory(&si, sizeof(STARTUPINFO));
+            si.cb = sizeof(STARTUPINFO);
+            if (!CreateProcess(PATH, NULL, NULL, NULL, FALSE, CREATE_NEW_CONSOLE, NULL, NULL, &si, &pi)) {
+                return GetLastError();
+            }
+
+            std::cout << "Задание отправлено на печать" << std::endl;
+            break;
+        case '3':
+            ZeroMemory(&si, sizeof(STARTUPINFO));
+            si.cb = sizeof(STARTUPINFO);
+            if (!CreateProcess(PATH, NULL, NULL, NULL, FALSE, CREATE_NEW_CONSOLE, NULL, NULL, &si, &pi)) {
+                return GetLastError();
+            }
+
+            std::cout << "Задание отправлено на печать" << std::endl;
+            break;
+        default:
+            std::cout << "Ошибка" << std::endl;
+            break;
+        }
+    }
+}
 
 int main()
 {
-	Thread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)thread, NULL ,NULL, &IDThread);
-	if (Thread == NULL) {
-		std::cout << "Ошибка" << std::endl;
-		return GetLastError();
-	}
+    srand(time(NULL));
+    setlocale(LC_ALL, "ru");
+    
+    std::cout << "Принтер активен" << std::endl;
+    mutex = CreateMutex(NULL, FALSE, L"PrinterMutex");
+    if (mutex != NULL) {
+        return GetLastError();
+    }
+    WaitForSingleObject(mutex, INFINITE);
+    printer = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)threadPrinter, NULL, NULL, &IDT);
+    if (printer != NULL) {
+        return GetLastError();
+    }
+    WaitForSingleObject(printer, INFINITE);
+    CloseHandle(mutex);
+    CloseHandle(printer);
 
-
-
-	WaitForSingleObject(Thread, INFINITE);
-	CloseHandle(Thread);
 }
+

@@ -1,0 +1,55 @@
+#include <iostream>
+#include <Windows.h>
+
+HANDLE mutex, Thread;
+DWORD IDThread;
+
+std::string state;
+std::string states[] = {
+	"Печать",
+	"Ошибка печати",
+	"Готово",
+	"Выключен"
+};
+
+DWORD WINAPI thread() {
+	srand(time(NULL));
+	mutex = CreateMutex(NULL, TRUE, TEXT("PrinterMutex"));
+	if (mutex == NULL) {
+		std::cout << "Ошибка" << std::endl;
+		return GetLastError();
+	}
+	WaitForSingleObject(mutex, INFINITE);
+
+	state = states[0];
+	std::cout << state << std::endl;
+
+	int tempSec = rand() % 16;
+	if (tempSec >= 10) {
+		std::cout << "Ошибка печати" << std::endl;
+	}
+	else {
+		Sleep(tempSec < 5 ? 5 : tempSec);
+	}
+
+	ReleaseMutex(mutex);
+	state = states[2];
+	std::cout << state << std::endl;
+
+	
+}
+
+
+int main()
+{
+	Thread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)thread, NULL ,NULL, &IDThread);
+	if (Thread == NULL) {
+		std::cout << "Ошибка" << std::endl;
+		return GetLastError();
+	}
+
+
+
+	WaitForSingleObject(Thread, INFINITE);
+	CloseHandle(Thread);
+}

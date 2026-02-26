@@ -7,30 +7,31 @@ int main()
     srand(time(NULL));
     setlocale(LC_ALL, "ru");
 
-    HANDLE mutex;
+    HANDLE mutex = CreateMutex(NULL, FALSE, L"PrinterMutex");
 
     STARTUPINFO si;
     PROCESS_INFORMATION pi;
 
     wchar_t PATH[] = L"C:\\Users\\st310-05\\Desktop\\konkov_prakt12\\Printer\\x64\\Debug\\Client.exe";
 
-    ZeroMemory(&si, sizeof(STARTUPINFO));
-    si.cb = sizeof(STARTUPINFO);
-    mutex = CreateMutex(NULL, FALSE, L"PrinterMutex");
     if (mutex == NULL) {
         return GetLastError();
     }
-    
+    ZeroMemory(&si, sizeof(STARTUPINFO));
+    si.cb = sizeof(STARTUPINFO);
+    if (!CreateProcess(PATH, NULL, NULL, NULL, FALSE, CREATE_NEW_CONSOLE, NULL, NULL, &si, &pi)) {
+        std::cout << "Ошибка" << std::endl;
+    }
     std::cout << "Принтер активен" << std::endl;
     std::cout << "1. Запустить печать" << std::endl;
-    char user;
+    char user = '1';
     while (true) {
+        
         std::cin >> user;
         if (user == '1') {
-            if (!CreateProcess(PATH, NULL, NULL, NULL, FALSE, CREATE_NEW_CONSOLE, NULL, NULL, &si, &pi)) {
-                std::cout << "Ошибка" << std::endl;
-            }
-            if (WaitForSingleObject(mutex, 600000) == WAIT_OBJECT_0) {
+            
+            DWORD wait = WaitForSingleObject(mutex, 600000);
+            if (wait == WAIT_OBJECT_0) {
                 std::cout << "Печать" << std::endl;
                 int time = (rand() % 15) * 1000;
                 if (time >= 10000) {
@@ -45,18 +46,16 @@ int main()
             else {
                 std::cout << "Принтер выключается" << std::endl;
                 break;
-            }
-
-            WaitForSingleObject(pi.hProcess, INFINITE);
-            WaitForSingleObject(pi.hThread, INFINITE);
-            CloseHandle(pi.hProcess);
-            CloseHandle(pi.hThread);
+            }   
         }
         else {
             std::cout << "Не верно выбранное действие";
         }
     }
-
+    WaitForSingleObject(pi.hProcess, INFINITE);
+    CloseHandle(pi.hThread);
+    CloseHandle(pi.hProcess);
+    
     CloseHandle(mutex);
 
 }

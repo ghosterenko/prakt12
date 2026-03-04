@@ -1,61 +1,38 @@
 #include <iostream>
 #include <Windows.h>
-
-
 int main()
 {
     srand(time(NULL));
     setlocale(LC_ALL, "ru");
 
-    HANDLE mutex = CreateMutex(NULL, FALSE, L"PrinterMutex");
-
-    STARTUPINFO si;
-    PROCESS_INFORMATION pi;
-
-    wchar_t PATH[] = L"C:\\Users\\st310-05\\Desktop\\konkov_prakt12\\Printer\\x64\\Debug\\Client.exe";
-
+    HANDLE mutex = CreateMutexA(NULL, FALSE, "PrinterMutex");
     if (mutex == NULL) {
         return GetLastError();
     }
-    ZeroMemory(&si, sizeof(STARTUPINFO));
-    si.cb = sizeof(STARTUPINFO);
-    if (!CreateProcess(PATH, NULL, NULL, NULL, FALSE, CREATE_NEW_CONSOLE, NULL, NULL, &si, &pi)) {
-        std::cout << "Ошибка" << std::endl;
-    }
+
     std::cout << "Принтер активен" << std::endl;
-    std::cout << "1. Запустить печать" << std::endl;
-    char user = '1';
     while (true) {
-        
-        std::cin >> user;
-        if (user == '1') {
-            
-            DWORD wait = WaitForSingleObject(mutex, 600000);
-            if (wait == WAIT_OBJECT_0) {
-                std::cout << "Печать" << std::endl;
-                int time = (rand() % 15) * 1000;
-                if (time >= 10000) {
-                    std::cout << "Ошибка печати" << std::endl;
-                }
-                else {
-                    Sleep(time);
-                }
-                ReleaseMutex(mutex);
-                std::cout << "Готово" << std::endl;
+        DWORD wait = WaitForSingleObject(mutex, 600000);
+        if (wait == WAIT_OBJECT_0) {
+            std::cout << "Печать" << std::endl;
+            int time = rand() % 15;
+            if (time >= 10) {
+                std::cout << "Ошибка печати" << std::endl;
+                break;
             }
             else {
-                std::cout << "Принтер выключается" << std::endl;
-                break;
-            }   
+                Sleep(time * 1000);
+                std::cout << "Готово" << std::endl;
+            }
+            ReleaseMutex(mutex);
         }
         else {
-            std::cout << "Не верно выбранное действие";
-        }
+            std::cout << "Принтер выключается" << std::endl;
+            break;
+        } 
     }
-    WaitForSingleObject(pi.hProcess, INFINITE);
-    CloseHandle(pi.hThread);
-    CloseHandle(pi.hProcess);
-    
+
     CloseHandle(mutex);
+    return 0;
 
 }

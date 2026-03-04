@@ -6,13 +6,9 @@ int main()
     setlocale(LC_ALL, "ru");
 
     HANDLE mutex = CreateMutexA(NULL, FALSE, "PrinterMutex");
-    if (mutex == NULL) {
-        return GetLastError();
-    }
-
-    std::cout << "Принтер активен" << std::endl;
+    if (mutex == NULL) return GetLastError();
     while (true) {
-        DWORD wait = WaitForSingleObject(mutex, 600000);
+        DWORD wait = WaitForSingleObject(mutex, INFINITE);
         if (wait == WAIT_OBJECT_0) {
             std::cout << "Печать" << std::endl;
             int time = rand() % 15;
@@ -22,16 +18,12 @@ int main()
             }
             else {
                 Sleep(time * 1000);
-                std::cout << "Готово" << std::endl;
             }
             ReleaseMutex(mutex);
+            std::cout << "Готово" << std::endl;
         }
-        else {
-            std::cout << "Принтер выключается" << std::endl;
-            break;
-        } 
     }
-
+    WaitForSingleObject(mutex, INFINITE);
     CloseHandle(mutex);
     return 0;
 

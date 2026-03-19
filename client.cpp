@@ -10,7 +10,8 @@ int main()
     std::cout << "1. Фоновый: " << std::endl;
     std::cout << "2. Нормальный: " << std::endl;
     std::cout << "3. Высокий: " << std::endl;
-    char n;
+    int n;
+    std::cin >> n;
     switch (n) {
     case 1:
         SetPriorityClass(GetCurrentProcess(), IDLE_PRIORITY_CLASS);
@@ -24,21 +25,33 @@ int main()
     default:
         break;
     }
-
+    // 1. Открывает иминованный мьютекс
     HANDLE OpenMutexPrinter = OpenMutexA(MUTANT_ALL_ACCESS, FALSE, "PrinterMutex");
     if (OpenMutexPrinter == NULL) {
         std::cout << "Принтер не найден" << std::endl;
         return 1;
     }
+    // 2. Ожидает нажатие от пользователя
+    std::cout << "Нажмите на любую клавишу" << std::endl;
     std::cin.get();
+
+    // 3. Ожидание мьютекса
     DWORD wait = WaitForSingleObject(OpenMutexPrinter, INFINITE);
+    // 4. При достпуности
     if (wait == WAIT_OBJECT_0) {
+        // 4.1. захватывает мьютекса
+        WaitForSingleObject(OpenMutexPrinter, INFINITE);
+        // 4.2. Задание отправлено
         std::cout << "Задание отправлено на печать" << std::endl;
+        // 4.3. освобаждает мьютекса
         ReleaseMutex(OpenMutexPrinter);
     }
+    // 5. Ожидает захват мьютекса
     WaitForSingleObject(OpenMutexPrinter, INFINITE);
-    std::cout << "Печать завершена" << std::endl;
+    // 6. Освобождает мьютекс и после
     ReleaseMutex(OpenMutexPrinter);
+    // 6.1. Сообщает о завершении печати
+    std::cout << "Печать завершена" << std::endl;
 
     CloseHandle(OpenMutexPrinter);
     return 0;

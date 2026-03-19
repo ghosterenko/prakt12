@@ -4,14 +4,20 @@ int main()
 {
     srand(time(NULL));
     setlocale(LC_ALL, "ru");
-
+    // 1. Создает иминованный мьютекс
     HANDLE mutex = CreateMutexA(NULL, FALSE, "PrinterMutex");
     if (mutex == NULL) return GetLastError();
+
     while (true) {
-        DWORD wait = WaitForSingleObject(mutex, INFINITE);
+        // 2. ожидает захвата мьютекса
+        DWORD wait = WaitForSingleObject(mutex, 600000);
+        std::cout << "Ожидание" << std::endl;
         if (wait == WAIT_OBJECT_0) {
-            std::cout << "Печать" << std::endl;
+            // 3. переходит в состояние печать
+            // 4. Удерживает мьютекс 5-15 сек
             int time = rand() % 15;
+
+            // 4.1. В случае, если печать идет более 10 секунд, принтер должен вывести текст: "Ошибка печати"
             if (time >= 10) {
                 std::cout << "Ошибка печати" << std::endl;
                 break;
@@ -19,9 +25,13 @@ int main()
             else {
                 Sleep(time * 1000);
             }
+            std::cout << "Печать" << std::endl;
+            // 5. Освобождает мьютекс
             ReleaseMutex(mutex);
+            // 6. Переходит в состояние готово и выводит состояние
             std::cout << "Готово" << std::endl;
         }
+        
     }
     WaitForSingleObject(mutex, INFINITE);
     CloseHandle(mutex);

@@ -29,7 +29,7 @@ int main()
     HANDLE OpenMutexPrinter = OpenMutexA(MUTANT_ALL_ACCESS, FALSE, "PrinterMutex");
     if (OpenMutexPrinter == NULL) {
         std::cout << "Принтер не найден" << std::endl;
-        return 1;
+        return 0;
     }
     // 2. Ожидает нажатие от пользователя
     std::cout << "Нажмите на любую клавишу" << std::endl;
@@ -40,11 +40,11 @@ int main()
     // 4. При достпуности
     if (wait == WAIT_OBJECT_0) {
         // 4.1. захватывает мьютекса
-        WaitForSingleObject(OpenMutexPrinter, INFINITE);
         // 4.2. Задание отправлено
         std::cout << "Задание отправлено на печать" << std::endl;
         // 4.3. освобаждает мьютекса
         ReleaseMutex(OpenMutexPrinter);
+        std::cout << "Печать завершена" << std::endl;
     }
     // 5. Ожидает захват мьютекса
     WaitForSingleObject(OpenMutexPrinter, INFINITE);

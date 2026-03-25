@@ -1,4 +1,5 @@
 #include <iostream>
+
 #include <Windows.h>
 #include <conio.h>
 
@@ -40,6 +41,7 @@ int main()
     // 4. При достпуности
     if (wait == WAIT_OBJECT_0) {
         // 4.1. захватывает мьютекса
+        WaitForSingleObject(OpenMutexPrinter, INFINITE);
         // 4.2. Задание отправлено
         std::cout << "Задание отправлено на печать" << std::endl;
         // 4.3. освобаждает мьютекса

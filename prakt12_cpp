@@ -8,33 +8,28 @@ int main()
     HANDLE mutex = CreateMutexA(NULL, FALSE, "PrinterMutex");
     if (mutex == NULL) return GetLastError();
     std::cin.get();
-    ReleaseMutex(mutex);
-    while (true) {
-        // 2. ожидает захвата мьютекса
-        std::cout << "Ожидание" << std::endl;
-        if (WaitForSingleObject(mutex, 600000) != WAIT_TIMEOUT) {
-            // 3. переходит в состояние печать
-            // 4. Удерживает мьютекс 5-15 сек
-            int time = rand() % 15;
-            std::cout << "Печать" << std::endl;
-            WaitForSingleObject(mutex, (time * 1000));
-            Sleep(time * 1000);
-            // 4.1. В случае, если печать идет более 10 секунд, принтер должен вывести текст: "Ошибка печати"
-            if (time <= 10) {
-                std::cout << "Ошибка печати" << std::endl;
-                break;
-            }
-            else {
-                // 5. Освобождает мьютекс
-                ReleaseMutex(mutex);
-                // 6. Переходит в состояние готово и выводит состояние
-                std::cout << "Готово" << std::endl;
-                break;
-            }
-            
-        }
+    // 2. ожидает захвата мьютекса
+    std::cout << "Ожидание" << std::endl;
+    if(WaitForSingleObject(mutex, 600000) == WAIT_OBJECT_0) {
+        // 3. переходит в состояние печать
+        // 4. Удерживает мьютекс 5-15 сек
+        int time = rand() % 15;
+        std::cout << "Печать" << std::endl;
+        WaitForSingleObject(mutex, INFINITE);
+        Sleep(time * 1000);
+        // 5. Освобождает мьютекс
         ReleaseMutex(mutex);
+        // 4.1. В случае, если печать идет более 10 секунд, принтер должен вывести текст: "Ошибка печати"
+        if (time >= 10) {
+            std::cout << "Ошибка печати" << std::endl;
+        }
+        else {
+            // 6. Переходит в состояние готово и выводит состояние
+            std::cout << "Готово" << std::endl;
+        }
+
     }
+    ReleaseMutex(mutex);
 
     CloseHandle(mutex);
     return 0;

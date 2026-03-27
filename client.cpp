@@ -1,5 +1,4 @@
 #include <iostream>
-
 #include <Windows.h>
 #include <conio.h>
 
@@ -26,35 +25,32 @@ int main()
     default:
         break;
     }
-    // 1. Открывает иминованный мьютекс
-    HANDLE OpenMutexPrinter = OpenMutexA(MUTANT_ALL_ACCESS, FALSE, "PrinterMutex");
+ 
+    HANDLE OpenMutexPrinter = OpenMutex(MUTANT_ALL_ACCESS, FALSE, L"PrinterMutex");
     if (OpenMutexPrinter == NULL) {
         std::cout << "Принтер не найден" << std::endl;
         return 0;
     }
-    // 2. Ожидает нажатие от пользователя
-    std::cout << "Нажмите на любую клавишу" << std::endl;
-    std::cin.get();
 
-    // 3. Ожидание мьютекса
-    DWORD wait = WaitForSingleObject(OpenMutexPrinter, INFINITE);
-    // 4. При достпуности
-    if (wait == WAIT_OBJECT_0) {
-        // 4.1. захватывает мьютекса
-        WaitForSingleObject(OpenMutexPrinter, INFINITE);
-        // 4.2. Задание отправлено
-        std::cout << "Задание отправлено на печать" << std::endl;
-        // 4.3. освобаждает мьютекса
-        ReleaseMutex(OpenMutexPrinter);
-        std::cout << "Печать завершена" << std::endl;
+
+    while (true)
+    {
+        std::cout << "Ожидание" << std::endl;
+        DWORD wait = WaitForSingleObject(OpenMutexPrinter, INFINITE);
+        std::cout << "Подключен - нажмите на любую клавишу чтобы отправить задание" << std::endl;
+        
+        if (std::cin.get()) {
+            if (wait == WAIT_OBJECT_0) {
+
+                std::cout << "Задание отправлено на печать" << std::endl;
+                ReleaseMutex(OpenMutexPrinter);
+
+                WaitForSingleObject(OpenMutexPrinter, INFINITE);
+                ReleaseMutex(OpenMutexPrinter);
+                std::cout << "Печать завершена" << std::endl;
+            }
+        }
     }
-    // 5. Ожидает захват мьютекса
-    WaitForSingleObject(OpenMutexPrinter, INFINITE);
-    // 6. Освобождает мьютекс и после
-    ReleaseMutex(OpenMutexPrinter);
-    // 6.1. Сообщает о завершении печати
-    std::cout << "Печать завершена" << std::endl;
-
     CloseHandle(OpenMutexPrinter);
     return 0;
 }
